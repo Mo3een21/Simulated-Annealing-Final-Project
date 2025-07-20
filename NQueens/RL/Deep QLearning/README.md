@@ -1,153 +1,140 @@
 
+
 ---
 
-# ♟️ N-Queens Solver using Reinforcement Learning and Simulated Annealing
+# ♟️ N-Queens with Simulated Annealing and Q-Learning 
 
 ## 📌 Overview
 
-This project presents an advanced approach to solving the classic **N-Queens problem** using a combination of **Simulated Annealing (SA)** and **Reinforcement Learning (RL)**. Rather than relying on a static objective function, our solver learns a custom potential (heuristic) function through training episodes. This approach allows for adaptive, intelligent navigation of the solution space, even as the board size increases.
+This project presents an advanced method for solving the **N-Queens problem** by combining **Simulated Annealing (SA)** with a **Q-Learning agent** powered by a **neural network-based Q-function**. Unlike traditional SA or tabular Q-learning, the Q-function here is approximated using a deep neural network, and decisions are made using Boltzmann exploration for probabilistic move acceptance.
 
 ---
 
 ## 🚀 Key Features
 
-* **Dynamic Heuristic Learning**: A neural-like potential function is trained to guide the search using reinforcement signals from successful SA trajectories.
-* **Simulated Annealing Agent**: Optimizes queen positions using probabilistic move acceptance, enabling escapes from local minima.
-* **Feature Engineering**: Potential is computed based on column and diagonal conflicts, with each feature having learnable weights.
-* **Online Training Loop**: Gradients are computed from successful episodes, and weights are updated using momentum-based SGD.
-* **Visual Training Diagnostics**: Includes plots for success rate, loss, convergence speed, and weight evolution.
+* 🔍 **State Representation**: Board is encoded as a one-hot vector along with normalized conflict features.
+* 🧠 **Q-Network**: A fully connected neural network predicts Q-values for (state, action) pairs.
+* 🔁 **Simulated Annealing Guided by Q-values**: Replaces handcrafted objective functions with learned Q-value estimations.
+* 🧪 **Replay Buffer + Batch Training**: Uses experience replay for stable Q-network training.
+* 🎯 **Target Network**: Periodically updated target network stabilizes Q-learning.
+* 📈 **Performance Tracking**: Tracks success rate, training steps, and visualizes learning progress.
 
 ---
 
 ## 🧠 Algorithms
 
-### Simulated Annealing (SA)
+### 🔹 Simulated Annealing (SA)
 
-* Explores the solution space probabilistically.
-* Moves that reduce conflict (phi) are always accepted.
-* Moves that increase phi may be accepted with a probability based on temperature `T`.
-* Adaptive cooling and reheating ensure optimal exploration.
+* Probabilistic local search algorithm.
+* Accepts worse moves with a probability based on temperature.
+* Temperature decays with each step.
 
-### Reinforcement Learning (RL)
+### 🔸 Q-Learning (with Function Approximation)
 
-* Learns to shape the potential function via self-play.
-* Uses trajectories from successful SA episodes to compute loss and gradient.
-* Loss function:
-
-  ```
-  L = Σ_t (phi(state_t) - c * (T - t))^2
-  ```
-
-  where `T` is total trajectory length and `c` is a scaling constant.
-* Momentum SGD updates learned weights across features.
-
----
-
-## 🧪 Applications
-
-This methodology is highly generalizable to other constraint satisfaction and combinatorial optimization problems, such as:
-
-* Sudoku solving
-* Traveling salesman variations
-* Puzzle-15
-* Hungarian cube
+* Learns a Q-function `Q(s, a)` estimating expected reward.
+* Uses a neural network to generalize across unseen states and actions.
+* Learns from transitions `(s, a, r, s', done)` stored in a replay buffer.
 
 ---
 
 
+
 ---
 
-## 🧰 Requirements
+## 📦 Dependencies
 
 * Python 3.8+
 * NumPy
+* PyTorch
 * Matplotlib
 
-Install dependencies:
+Install using:
 
 ```bash
-pip install numpy matplotlib
+pip install numpy torch matplotlib
 ```
 
 ---
 
+## ▶️ How to Run
 
-### Parameters:
+### ✅ Train the Agent
 
-Default training configuration (inside `main()`):
+```bash
+python nqueens_qlearning.py
+```
+
+You can adjust the parameters in `train_agent()` such as board size (`n`), number of episodes, learning rate, etc.
+
+### 🧪 Test the Trained Agent
+
+After training, the model is tested on new N-Queens boards using:
 
 ```python
-config = {
-    'board_size': 8,
-    'num_episodes': 2000,
-    'max_steps': 10000,
-    'learning_rate': 0.001,
-    'c': 0.02,
-    'momentum': 0.9,
-    'weight_decay': 0.0001
-}
+test_trained_agent(agent, n=8, num_tests=100)
 ```
 
 ---
 
-## 📊 Output
+## 📊 Visualization
 
-* Prints stats every `plot_interval` episodes.
+Training produces two plots:
 
-* Displays training plots:
+* **Success Rate vs Episodes**
+* **Steps to Solution (moving average)**
 
-  * ✅ Success Rate
-  * 📉 Loss
-  * ⏱️ Steps per episode
-  * 🔁 Weight evolution
-
-* Saves learned weights as `learned_weights_n8.npy`.
+These help assess convergence and search efficiency over time.
 
 ---
 
-## 🧪 Testing
+## 🔬 Details
 
-After training, the learned weights are tested on `num_tests` (default: 100) random board configurations. The test evaluates:
+### 🧩 State Vector
 
-* ✅ Success rate
-* ⏱️ Average steps to solution
+Length = `n^2 + n + 2*(2n - 1)`
 
-You can also visualize a final demonstration run with the trained agent.
+* One-hot board encoding (`n^2`)
+* Normalized column, major and minor diagonal conflict vectors.
+
+### 🧠 Q-Network Architecture
+
+* Input: `[state_vector] + [row/n, col/n]`
+* Layers: 3 hidden layers (ReLU + Dropout)
+* Output: Scalar Q-value
+
+### 🏃 SA + RL Episode
+
+* At each step:
+
+  * Q-network selects next action via Boltzmann exploration.
+  * If move accepted (SA criterion), update state and add to replay buffer.
+* Trains Q-network using MSE loss over sampled transitions.
 
 ---
 
-## 🧩 Why This Is Powerful
-
-Unlike traditional heuristics that require domain knowledge, this RL+SA framework:
-
-* Learns what "good" intermediate states look like from experience.
-* Generalizes better across instances.
-* Can be extended to dynamic or hybrid problems where rules shift over time.
-
----
-
-## 📈 Sample Results (for N=8)
+## ✅ Sample Output
 
 ```
-Training Complete!
-Total Time: 115.3 seconds
-Final Success Rate: 82.50%
-Final Avg Loss: 0.007613
-Final Avg Steps: 208.1
-
-Test Success Rate: 84.00%
-Average Steps (successful): 201.5
+Episode 0: Success rate: 100.00%, Avg steps: 780.0, Epsilon: 0.1
+...
+Test Results:
+Success Rate: 100.00%
+Average Steps to Solution: 780
 ```
 
 ---
 
-## 🧩 Credits
+## 💡 Potential Enhancements
 
-Developed as part of a project exploring smart optimization techniques using AI. Combines core ideas from:
+* Replace Q-network with a **Graph Neural Network** for better spatial generalization.
+* Add **Double DQN** or **Dueling Network** architecture.
+* Apply to generalized **Constraint Satisfaction Problems (CSPs)** beyond N-Queens.
 
-* **Reinforcement Learning**
-* **Simulated Annealing**
-* **Neural Heuristics**
+---
+
+## 📌 License
+
+MIT License. Free to use and modify for academic or personal purposes.
 
 ---
 
