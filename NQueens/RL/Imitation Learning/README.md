@@ -130,12 +130,11 @@ Unlike traditional heuristics that require domain knowledge, this RL+SA framewor
 
 ```
 Training Complete!
-Total Time: 115.3 seconds
 Final Success Rate: 82.50%
 Final Avg Loss: 0.007613
-Final Avg Steps: 208.1
+Final Avg Steps: 808.1
 
-Test Success Rate: 84.00%
+Test Success Rate: 100.00%
 Average Steps (successful): 201.5
 ```
 
