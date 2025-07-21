@@ -30,7 +30,7 @@ The goal is to **learn better heuristics** (than classic Manhattan distance) to 
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/yourusername/rl-15puzzle-solver.git
+   git clone https://github.com/Mo3een21/15puzzle.git
    cd rl-15puzzle-solver
    ```
 
